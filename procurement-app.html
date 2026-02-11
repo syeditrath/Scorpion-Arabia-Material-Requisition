@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .items-section {
+            margin-top: 30px;
+        }
+
+        .items-section h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr 40px;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: end;
+        }
+
+        .item-row input {
+            margin-bottom: 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-add {
+            margin-top: 12px;
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #3182ce;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .table-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f7fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef5e7;
+            color: #d68910;
+        }
+
+        .auth-section {
+            background: #f7fafc;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f56565;
+        }
+
+        .status-indicator.connected {
+            background: #48bb78;
+        }
+
+        .user-info {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .btn-auth {
+            padding: 8px 20px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-auth:hover {
+            background: #3182ce;
+        }
+
+        .btn-signout {
+            background: #718096;
+        }
+
+        .btn-signout:hover {
+            background: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .item-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .field-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 SCORPION ARABIA MATERIAL REQUISITION FORM</h1>
+            <p>Manage project procurement requests efficiently</p>
+            <div class="auth-section">
+                <div class="auth-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <span class="user-info" id="user-info">Not connected to OneDrive</span>
+                </div>
+                <button class="btn-auth" id="auth-btn">Sign in to OneDrive</button>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="project-select">Select Project</label>
+                <select id="project-select">
+                    <option value="">Choose a project...</option>
+                    <option value="Building A - Phase 1">Building A - Phase 1</option>
+                    <option value="Building A - Phase 2">Building A - Phase 2</option>
+                    <option value="Building B - Foundation">Building B - Foundation</option>
+                    <option value="Building B - Structure">Building B - Structure</option>
+                    <option value="Infrastructure - Roads">Infrastructure - Roads</option>
+                    <option value="Infrastructure - Utilities">Infrastructure - Utilities</option>
+                    <option value="Landscaping - North">Landscaping - North</option>
+                    <option value="Landscaping - South">Landscaping - South</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="submitter-name">Submitter Name</label>
+                <input type="text" id="submitter-name" placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+                <label for="submitter-phone">Phone Number</label>
+                <input type="tel" id="submitter-phone" placeholder="Enter your phone number">
+            </div>
+
+            <div class="items-section">
+                <h3>Items to Procure</h3>
+                <div id="items-container">
+                    <div class="item-row">
+                        <div class="input-group">
+                            <span class="field-label">Item Name</span>
+                            <input type="text" class="item-name" placeholder="e.g., Cement bags">
+                        </div>
+                        <div class="input-group">
+                            <span class="field-label">Quantity</span>
+                            <input type="number" class="item-quantity" placeholder="0" min="1">
+                        </div>
+                        <div class="input-group">
+                            <span class="field-label">Delivery Location</span>
+                            <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                        </div>
+                        <button class="btn btn-danger remove-item" title="Remove item">×</button>
+                    </div>
+                </div>
+                <button class="btn btn-add" id="add-item-btn">+ Add Another Item</button>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="submit-btn">Submit Procurement Request</button>
+                <button class="btn btn-secondary" id="clear-btn">Clear Form</button>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2>Procurement Requests</h2>
+            <table id="requests-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Submitter</th>
+                        <th>Phone</th>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Location to Deliver</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-tbody">
+                    <tr>
+                        <td colspan="8" class="empty-state">No procurement requests yet. Submit your first request above!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // EmailJS Configuration
+        // IMPORTANT: Sign up at https://www.emailjs.com/ and replace these values
+        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ'; // Your EmailJS public key
+        const EMAILJS_SERVICE_ID = 'service_628rnep'; // Your EmailJS service ID
+        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd'; // Your EmailJS template ID
+        const PROCUREMENT_HEAD_EMAIL = 'syed.itrath@scorpion-contracting.com'; // Procurement head's email
+
+        // Initialize EmailJS
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
+
+        // Send email notification
+        async function sendNotification(items, submitterName, submitterPhone, project) {
+            try {
+                // Create items list for email
+                const itemsList = items.map((item, index) => 
+                    `${index + 1}. ${item.name} - Quantity: ${item.quantity} - Location: ${item.location}`
+                ).join('\n');
+
+                const templateParams = {
+                    to_email: PROCUREMENT_HEAD_EMAIL,
+                    from_name: submitterName,
+                    submitter_phone: submitterPhone,
+                    project_name: project,
+                    items_list: itemsList,
+                    submission_date: new Date().toLocaleString(),
+                    total_items: items.length
+                };
+
+                const response = await emailjs.send(
+                    EMAILJS_SERVICE_ID,
+                    EMAILJS_TEMPLATE_ID,
+                    templateParams
+                );
+
+                console.log('Email sent successfully:', response);
+                return true;
+            } catch (error) {
+                console.error('Email notification error:', error);
+                return false;
+            }
+        }
+
+        // IMPORTANT: You need to register your app at https://portal.azure.com
+        // and replace CLIENT_ID with your actual Application (client) ID
+        const msalConfig = {
+            auth: {
+                clientId: 'cfbe4917-0985-4040-bc07-53069c8a9312', // Replace with your Azure AD app client ID
+                authority: 'https://login.microsoftonline.com/common',
+                redirectUri: window.location.origin
+            },
+            cache: {
+                cacheLocation: 'localStorage',
+                storeAuthStateInCookie: false
+            }
+        };
+
+        const loginRequest = {
+            scopes: ['User.Read', 'Files.ReadWrite']
+        };
+
+        let msalInstance;
+        let currentAccount = null;
+
+        // Initialize MSAL
+        try {
+            msalInstance = new msal.PublicClientApplication(msalConfig);
+        } catch (error) {
+            console.error('MSAL initialization error:', error);
+        }
+
+        // Check if user is already signed in
+        async function initializeAuth() {
+            if (!msalInstance) return;
+
+            const accounts = msalInstance.getAllAccounts();
+            if (accounts.length > 0) {
+                currentAccount = accounts[0];
+                updateAuthUI(true);
+            }
+        }
+
+        // Sign in
+        async function signIn() {
+            try {
+                const loginResponse = await msalInstance.loginPopup(loginRequest);
+                currentAccount = loginResponse.account;
+                updateAuthUI(true);
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Failed to sign in. Please try again.');
+            }
+        }
+
+        // Sign out
+        function signOut() {
+            if (currentAccount) {
+                msalInstance.logoutPopup({
+                    account: currentAccount
+                });
+                currentAccount = null;
+                updateAuthUI(false);
+            }
+        }
+
+        // Update UI based on auth status
+        function updateAuthUI(isSignedIn) {
+            const indicator = document.getElementById('status-indicator');
+            const userInfo = document.getElementById('user-info');
+            const authBtn = document.getElementById('auth-btn');
+
+            if (isSignedIn && currentAccount) {
+                indicator.classList.add('connected');
+                userInfo.textContent = `Connected as ${currentAccount.name || currentAccount.username}`;
+                authBtn.textContent = 'Sign Out';
+                authBtn.className = 'btn-auth btn-signout';
+            } else {
+                indicator.classList.remove('connected');
+                userInfo.textContent = 'Not connected to OneDrive';
+                authBtn.textContent = 'Sign in to OneDrive';
+                authBtn.className = 'btn-auth';
+            }
+        }
+
+        // Get access token
+        async function getAccessToken() {
+            if (!currentAccount) {
+                throw new Error('No account signed in');
+            }
+
+            try {
+                const response = await msalInstance.acquireTokenSilent({
+                    scopes: loginRequest.scopes,
+                    account: currentAccount
+                });
+                return response.accessToken;
+            } catch (error) {
+                console.error('Silent token acquisition failed:', error);
+                const response = await msalInstance.acquireTokenPopup({
+                    scopes: loginRequest.scopes,
+                    account: currentAccount
+                });
+                return response.accessToken;
+            }
+        }
+
+        // Create Excel file from data
+        function createExcelFile(requests) {
+            const worksheet = XLSX.utils.json_to_sheet(requests.map(req => ({
+                'Project': req.project,
+                'Submitter Name': req.submitterName,
+                'Phone Number': req.submitterPhone,
+                'Item Name': req.name,
+                'Quantity': req.quantity,
+                'Delivery Location': req.location,
+                'Status': req.status,
+                'Date': req.date
+            })));
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Requisitions');
+
+            // Generate buffer
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            return new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        }
+
+        // Upload file to OneDrive
+        async function uploadToOneDrive(blob, filename) {
+            try {
+                const accessToken = await getAccessToken();
+                
+                const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/ScorpionArabia/${filename}:/content`;
+                
+                const response = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    },
+                    body: blob
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Upload error:', error);
+                throw error;
+            }
+        }
+
+        // Auth button event
+        document.getElementById('auth-btn').addEventListener('click', () => {
+            if (currentAccount) {
+                signOut();
+            } else {
+                signIn();
+            }
+        });
+
+        // Initialize on page load
+        initializeAuth();
+
+        // Storage management
+        async function loadRequests() {
+            try {
+                const result = await window.storage.get('procurement-requests');
+                return result ? JSON.parse(result.value) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function saveRequests(requests) {
+            try {
+                await window.storage.set('procurement-requests', JSON.stringify(requests));
+            } catch (error) {
+                console.error('Error saving requests:', error);
+            }
+        }
+
+        // Add item row
+        document.getElementById('add-item-btn').addEventListener('click', () => {
+            const container = document.getElementById('items-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <div class="input-group">
+                    <span class="field-label">Item Name</span>
+                    <input type="text" class="item-name" placeholder="e.g., Cement bags">
+                </div>
+                <div class="input-group">
+                    <span class="field-label">Quantity</span>
+                    <input type="number" class="item-quantity" placeholder="0" min="1">
+                </div>
+                <div class="input-group">
+                    <span class="field-label">Delivery Location</span>
+                    <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                </div>
+                <button class="btn btn-danger remove-item" title="Remove item">×</button>
+            `;
+            container.appendChild(newRow);
+            attachRemoveListeners();
+        });
+
+        // Remove item row
+        function attachRemoveListeners() {
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.onclick = function() {
+                    const container = document.getElementById('items-container');
+                    if (container.children.length > 1) {
+                        this.parentElement.remove();
+                    } else {
+                        alert('At least one item is required!');
+                    }
+                };
+            });
+        }
+        attachRemoveListeners();
+
+        // Submit form
+        document.getElementById('submit-btn').addEventListener('click', async () => {
+            const project = document.getElementById('project-select').value;
+            const submitterName = document.getElementById('submitter-name').value.trim();
+            const submitterPhone = document.getElementById('submitter-phone').value.trim();
+            
+            if (!project) {
+                alert('Please select a project!');
+                return;
+            }
+
+            if (!submitterName) {
+                alert('Please enter your name!');
+                return;
+            }
+
+            if (!submitterPhone) {
+                alert('Please enter your phone number!');
+                return;
+            }
+
+            if (!currentAccount) {
+                alert('Please sign in to OneDrive first to save the requisition!');
+                return;
+            }
+
+            const itemRows = document.querySelectorAll('.item-row');
+            const items = [];
+            let hasError = false;
+
+            itemRows.forEach(row => {
+                const name = row.querySelector('.item-name').value.trim();
+                const quantity = row.querySelector('.item-quantity').value;
+                const location = row.querySelector('.item-location').value.trim();
+
+                if (name && quantity && location) {
+                    items.push({
+                        project,
+                        submitterName,
+                        submitterPhone,
+                        name,
+                        quantity: parseInt(quantity),
+                        location,
+                        status: 'Pending',
+                        date: new Date().toLocaleDateString()
+                    });
+                } else if (name || quantity || location) {
+                    hasError = true;
+                }
+            });
+
+            if (hasError) {
+                alert('Please complete all fields for each item or remove empty rows!');
+                return;
+            }
+
+            if (items.length === 0) {
+                alert('Please add at least one item!');
+                return;
+            }
+
+            try {
+                // Save to storage
+                const requests = await loadRequests();
+                requests.push(...items);
+                await saveRequests(requests);
+
+                // Create Excel file
+                const excelBlob = createExcelFile(requests);
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const filename = `Material_Requisitions_${timestamp}.xlsx`;
+
+                // Upload to OneDrive
+                await uploadToOneDrive(excelBlob, filename);
+
+                // Send email notification to procurement head
+                const emailSent = await sendNotification(items, submitterName, submitterPhone, project);
+                
+                if (!emailSent) {
+                    console.warn('Email notification failed, but request was saved');
+                }
+
+                // Update table
+                await renderTable();
+
+                // Clear form
+                document.getElementById('project-select').value = '';
+                document.getElementById('submitter-name').value = '';
+                document.getElementById('submitter-phone').value = '';
+                document.getElementById('items-container').innerHTML = `
+                    <div class="item-row">
+                        <div class="input-group">
+                            <span class="field-label">Item Name</span>
+                            <input type="text" class="item-name" placeholder="e.g., Cement bags">
+                        </div>
+                        <div class="input-group">
+                            <span class="field-label">Quantity</span>
+                            <input type="number" class="item-quantity" placeholder="0" min="1">
+                        </div>
+                        <div class="input-group">
+                            <span class="field-label">Delivery Location</span>
+                            <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                        </div>
+                        <button class="btn btn-danger remove-item" title="Remove item">×</button>
+                    </div>
+                `;
+                attachRemoveListeners();
+
+                alert('Procurement request submitted successfully! Notification sent to procurement head and saved to OneDrive.');
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('Error saving to OneDrive: ' + error.message);
+            }
+        });
+
+        // Clear form
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            document.getElementById('project-select').value = '';
+            document.getElementById('submitter-name').value = '';
+            document.getElementById('submitter-phone').value = '';
+            document.getElementById('items-container').innerHTML = `
+                <div class="item-row">
+                    <div class="input-group">
+                        <span class="field-label">Item Name</span>
+                        <input type="text" class="item-name" placeholder="e.g., Cement bags">
+                    </div>
+                    <div class="input-group">
+                        <span class="field-label">Quantity</span>
+                        <input type="number" class="item-quantity" placeholder="0" min="1">
+                    </div>
+                    <div class="input-group">
+                        <span class="field-label">Delivery Location</span>
+                        <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                    </div>
+                    <button class="btn btn-danger remove-item" title="Remove item">×</button>
+                </div>
+            `;
+            attachRemoveListeners();
+        });
+
+        // Render table
+        async function renderTable() {
+            const requests = await loadRequests();
+            const tbody = document.getElementById('requests-tbody');
+
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No procurement requests yet. Submit your first request above!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td>${req.project}</td>
+                    <td>${req.submitterName}</td>
+                    <td>${req.submitterPhone}</td>
+                    <td>${req.name}</td>
+                    <td>${req.quantity}</td>
+                    <td>${req.location}</td>
+                    <td><span class="status-badge status-pending">${req.status}</span></td>
+                    <td>${req.date}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Load table on page load
+        renderTable();
+    </script>
+</body>
+</html>
