@@ -678,14 +678,14 @@
         // Initialize on page load
         initializeAuth();
 
-        // Project Management
+        // Project Management using localStorage
         let projectsList = [];
 
-        async function loadProjects() {
+        function loadProjects() {
             try {
-                const result = await window.storage.get('projects-list');
-                if (result && result.value) {
-                    projectsList = JSON.parse(result.value);
+                const stored = localStorage.getItem('scorpion-projects-list');
+                if (stored) {
+                    projectsList = JSON.parse(stored);
                 } else {
                     // First time - initialize with default projects
                     projectsList = [
@@ -698,7 +698,7 @@
                         'Landscaping - North',
                         'Landscaping - South'
                     ];
-                    await saveProjects(projectsList);
+                    saveProjects(projectsList);
                 }
                 return projectsList;
             } catch (error) {
@@ -717,18 +717,18 @@
             }
         }
 
-        async function saveProjects(projects) {
+        function saveProjects(projects) {
             try {
                 projectsList = projects;
-                await window.storage.set('projects-list', JSON.stringify(projects));
-                console.log('Projects saved:', projects);
+                localStorage.setItem('scorpion-projects-list', JSON.stringify(projects));
+                console.log('Projects saved to localStorage:', projects);
             } catch (error) {
                 console.error('Error saving projects:', error);
             }
         }
 
-        async function renderProjects() {
-            const projects = await loadProjects();
+        function renderProjects() {
+            const projects = loadProjects();
             const select = document.getElementById('project-select');
             const projectList = document.getElementById('project-list');
 
@@ -757,27 +757,27 @@
         }
 
         // Event delegation for remove project buttons
-        document.addEventListener('click', async (e) => {
+        document.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-remove-project')) {
                 const projectName = e.target.getAttribute('data-project');
                 console.log('Removing project:', projectName);
                 
                 if (confirm(`Are you sure you want to remove "${projectName}"?`)) {
-                    const currentProjects = await loadProjects();
+                    const currentProjects = loadProjects();
                     console.log('Current projects before removal:', currentProjects);
                     
                     const updatedProjects = currentProjects.filter(p => p !== projectName);
                     console.log('Updated projects after removal:', updatedProjects);
                     
-                    await saveProjects(updatedProjects);
-                    await renderProjects();
+                    saveProjects(updatedProjects);
+                    renderProjects();
                     alert('Project removed successfully!');
                 }
             }
         });
 
         // Add new project
-        document.getElementById('add-project-btn-mgmt').addEventListener('click', async () => {
+        document.getElementById('add-project-btn-mgmt').addEventListener('click', () => {
             const input = document.getElementById('new-project-input');
             const projectName = input.value.trim();
 
@@ -786,16 +786,17 @@
                 return;
             }
 
-            const projects = await loadProjects();
+            const projects = loadProjects();
             if (projects.includes(projectName)) {
                 alert('This project already exists!');
                 return;
             }
 
             projects.push(projectName);
-            await saveProjects(projects);
-            await renderProjects();
+            saveProjects(projects);
+            renderProjects();
             input.value = '';
+            alert('Project added successfully!');
         });
 
         // Initialize projects
