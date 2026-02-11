@@ -91,7 +91,7 @@
 
         .item-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 2fr 40px;
+            grid-template-columns: 2fr 1fr 2fr 1.5fr 40px;
             gap: 12px;
             margin-bottom: 12px;
             align-items: end;
@@ -298,6 +298,77 @@
             margin-bottom: 4px;
             display: block;
         }
+
+        .project-management {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .project-management h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .project-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .project-input-row input {
+            flex: 1;
+        }
+
+        .project-list {
+            margin-top: 15px;
+        }
+
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .project-item span {
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .btn-remove-project {
+            padding: 6px 12px;
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-remove-project:hover {
+            background: #e53e3e;
+        }
+
+        .btn-add-project {
+            padding: 10px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-add-project:hover {
+            background: #38a169;
+        }
     </style>
 </head>
 <body>
@@ -319,15 +390,16 @@
                 <label for="project-select">Select Project</label>
                 <select id="project-select">
                     <option value="">Choose a project...</option>
-                    <option value="Building A - Phase 1">Building A - Phase 1</option>
-                    <option value="Building A - Phase 2">Building A - Phase 2</option>
-                    <option value="Building B - Foundation">Building B - Foundation</option>
-                    <option value="Building B - Structure">Building B - Structure</option>
-                    <option value="Infrastructure - Roads">Infrastructure - Roads</option>
-                    <option value="Infrastructure - Utilities">Infrastructure - Utilities</option>
-                    <option value="Landscaping - North">Landscaping - North</option>
-                    <option value="Landscaping - South">Landscaping - South</option>
                 </select>
+                
+                <div class="project-management">
+                    <h4>Manage Projects</h4>
+                    <div class="project-input-row">
+                        <input type="text" id="new-project-input" placeholder="Enter new project name">
+                        <button class="btn-add-project" id="add-project-btn-mgmt">Add Project</button>
+                    </div>
+                    <div class="project-list" id="project-list"></div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -356,6 +428,10 @@
                             <span class="field-label">Delivery Location</span>
                             <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
                         </div>
+                        <div class="input-group">
+                            <span class="field-label">Requested Date</span>
+                            <input type="date" class="item-date">
+                        </div>
                         <button class="btn btn-danger remove-item" title="Remove item">×</button>
                     </div>
                 </div>
@@ -379,13 +455,14 @@
                         <th>Item Name</th>
                         <th>Quantity</th>
                         <th>Location to Deliver</th>
+                        <th>Requested Date</th>
                         <th>Status</th>
-                        <th>Date</th>
+                        <th>Submission Date</th>
                     </tr>
                 </thead>
                 <tbody id="requests-tbody">
                     <tr>
-                        <td colspan="8" class="empty-state">No procurement requests yet. Submit your first request above!</td>
+                        <td colspan="9" class="empty-state">No procurement requests yet. Submit your first request above!</td>
                     </tr>
                 </tbody>
             </table>
@@ -395,10 +472,10 @@
     <script>
         // EmailJS Configuration
         // IMPORTANT: Sign up at https://www.emailjs.com/ and replace these values
-        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ'; // Your EmailJS public key
-        const EMAILJS_SERVICE_ID = 'service_628rnep'; // Your EmailJS service ID
-        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd'; // Your EmailJS template ID
-        const PROCUREMENT_HEAD_EMAIL = 'syed.itrath@scorpion-contracting.com'; // Procurement head's email
+        const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; // Your EmailJS public key
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Your EmailJS service ID
+        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Your EmailJS template ID
+        const PROCUREMENT_HEAD_EMAIL = 'procurement.head@scorpionarabia.com'; // Procurement head's email
 
         // Initialize EmailJS
         if (typeof emailjs !== 'undefined') {
@@ -410,7 +487,7 @@
             try {
                 // Create items list for email
                 const itemsList = items.map((item, index) => 
-                    `${index + 1}. ${item.name} - Quantity: ${item.quantity} - Location: ${item.location}`
+                    `${index + 1}. ${item.name} - Quantity: ${item.quantity} - Location: ${item.location} - Requested Date: ${item.requestedDate}`
                 ).join('\n');
 
                 const templateParams = {
@@ -441,9 +518,9 @@
         // and replace CLIENT_ID with your actual Application (client) ID
         const msalConfig = {
             auth: {
-                clientId: 'cfbe4917-0985-4040-bc07-53069c8a9312', // Replace with your Azure AD app client ID
+                clientId: 'YOUR_CLIENT_ID_HERE', // Replace with your Azure AD app client ID
                 authority: 'https://login.microsoftonline.com/common',
-                redirectUri: 'https://syeditrath.github.io/Scorpion-Arabia-Material-Requisition/'
+                redirectUri: window.location.origin
             },
             cache: {
                 cacheLocation: 'localStorage',
@@ -549,8 +626,9 @@
                 'Item Name': req.name,
                 'Quantity': req.quantity,
                 'Delivery Location': req.location,
+                'Requested Date': req.requestedDate || 'N/A',
                 'Status': req.status,
-                'Date': req.date
+                'Submission Date': req.date
             })));
 
             const workbook = XLSX.utils.book_new();
@@ -600,6 +678,96 @@
         // Initialize on page load
         initializeAuth();
 
+        // Project Management
+        const defaultProjects = [
+            'Building A - Phase 1',
+            'Building A - Phase 2',
+            'Building B - Foundation',
+            'Building B - Structure',
+            'Infrastructure - Roads',
+            'Infrastructure - Utilities',
+            'Landscaping - North',
+            'Landscaping - South'
+        ];
+
+        async function loadProjects() {
+            try {
+                const result = await window.storage.get('projects-list');
+                return result ? JSON.parse(result.value) : defaultProjects;
+            } catch (error) {
+                return defaultProjects;
+            }
+        }
+
+        async function saveProjects(projects) {
+            try {
+                await window.storage.set('projects-list', JSON.stringify(projects));
+            } catch (error) {
+                console.error('Error saving projects:', error);
+            }
+        }
+
+        async function renderProjects() {
+            const projects = await loadProjects();
+            const select = document.getElementById('project-select');
+            const projectList = document.getElementById('project-list');
+
+            // Update dropdown
+            select.innerHTML = '<option value="">Choose a project...</option>';
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                select.appendChild(option);
+            });
+
+            // Update project list
+            projectList.innerHTML = projects.map(project => `
+                <div class="project-item">
+                    <span>${project}</span>
+                    <button class="btn-remove-project" data-project="${project}">Remove</button>
+                </div>
+            `).join('');
+
+            // Attach remove listeners
+            document.querySelectorAll('.btn-remove-project').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const projectName = e.target.getAttribute('data-project');
+                    if (confirm(`Are you sure you want to remove "${projectName}"?`)) {
+                        const currentProjects = await loadProjects();
+                        const updatedProjects = currentProjects.filter(p => p !== projectName);
+                        await saveProjects(updatedProjects);
+                        await renderProjects();
+                    }
+                });
+            });
+        }
+
+        // Add new project
+        document.getElementById('add-project-btn-mgmt').addEventListener('click', async () => {
+            const input = document.getElementById('new-project-input');
+            const projectName = input.value.trim();
+
+            if (!projectName) {
+                alert('Please enter a project name!');
+                return;
+            }
+
+            const projects = await loadProjects();
+            if (projects.includes(projectName)) {
+                alert('This project already exists!');
+                return;
+            }
+
+            projects.push(projectName);
+            await saveProjects(projects);
+            await renderProjects();
+            input.value = '';
+        });
+
+        // Initialize projects
+        renderProjects();
+
         // Storage management
         async function loadRequests() {
             try {
@@ -635,6 +803,10 @@
                 <div class="input-group">
                     <span class="field-label">Delivery Location</span>
                     <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                </div>
+                <div class="input-group">
+                    <span class="field-label">Requested Date</span>
+                    <input type="date" class="item-date">
                 </div>
                 <button class="btn btn-danger remove-item" title="Remove item">×</button>
             `;
@@ -691,8 +863,9 @@
                 const name = row.querySelector('.item-name').value.trim();
                 const quantity = row.querySelector('.item-quantity').value;
                 const location = row.querySelector('.item-location').value.trim();
+                const requestedDate = row.querySelector('.item-date').value;
 
-                if (name && quantity && location) {
+                if (name && quantity && location && requestedDate) {
                     items.push({
                         project,
                         submitterName,
@@ -700,10 +873,11 @@
                         name,
                         quantity: parseInt(quantity),
                         location,
+                        requestedDate,
                         status: 'Pending',
                         date: new Date().toLocaleDateString()
                     });
-                } else if (name || quantity || location) {
+                } else if (name || quantity || location || requestedDate) {
                     hasError = true;
                 }
             });
@@ -760,6 +934,10 @@
                             <span class="field-label">Delivery Location</span>
                             <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
                         </div>
+                        <div class="input-group">
+                            <span class="field-label">Requested Date</span>
+                            <input type="date" class="item-date">
+                        </div>
                         <button class="btn btn-danger remove-item" title="Remove item">×</button>
                     </div>
                 `;
@@ -791,6 +969,10 @@
                         <span class="field-label">Delivery Location</span>
                         <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
                     </div>
+                    <div class="input-group">
+                        <span class="field-label">Requested Date</span>
+                        <input type="date" class="item-date">
+                    </div>
                     <button class="btn btn-danger remove-item" title="Remove item">×</button>
                 </div>
             `;
@@ -803,7 +985,7 @@
             const tbody = document.getElementById('requests-tbody');
 
             if (requests.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No procurement requests yet. Submit your first request above!</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No procurement requests yet. Submit your first request above!</td></tr>';
                 return;
             }
 
@@ -815,6 +997,7 @@
                     <td>${req.name}</td>
                     <td>${req.quantity}</td>
                     <td>${req.location}</td>
+                    <td>${req.requestedDate || 'N/A'}</td>
                     <td><span class="status-badge status-pending">${req.status}</span></td>
                     <td>${req.date}</td>
                 </tr>
