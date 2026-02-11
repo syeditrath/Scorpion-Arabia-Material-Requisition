@@ -679,29 +679,49 @@
         initializeAuth();
 
         // Project Management
-        const defaultProjects = [
-            'Building A - Phase 1',
-            'Building A - Phase 2',
-            'Building B - Foundation',
-            'Building B - Structure',
-            'Infrastructure - Roads',
-            'Infrastructure - Utilities',
-            'Landscaping - North',
-            'Landscaping - South'
-        ];
+        let projectsList = [];
 
         async function loadProjects() {
             try {
                 const result = await window.storage.get('projects-list');
-                return result ? JSON.parse(result.value) : defaultProjects;
+                if (result && result.value) {
+                    projectsList = JSON.parse(result.value);
+                } else {
+                    // First time - initialize with default projects
+                    projectsList = [
+                        'Building A - Phase 1',
+                        'Building A - Phase 2',
+                        'Building B - Foundation',
+                        'Building B - Structure',
+                        'Infrastructure - Roads',
+                        'Infrastructure - Utilities',
+                        'Landscaping - North',
+                        'Landscaping - South'
+                    ];
+                    await saveProjects(projectsList);
+                }
+                return projectsList;
             } catch (error) {
-                return defaultProjects;
+                console.error('Error loading projects:', error);
+                projectsList = [
+                    'Building A - Phase 1',
+                    'Building A - Phase 2',
+                    'Building B - Foundation',
+                    'Building B - Structure',
+                    'Infrastructure - Roads',
+                    'Infrastructure - Utilities',
+                    'Landscaping - North',
+                    'Landscaping - South'
+                ];
+                return projectsList;
             }
         }
 
         async function saveProjects(projects) {
             try {
+                projectsList = projects;
                 await window.storage.set('projects-list', JSON.stringify(projects));
+                console.log('Projects saved:', projects);
             } catch (error) {
                 console.error('Error saving projects:', error);
             }
@@ -711,6 +731,8 @@
             const projects = await loadProjects();
             const select = document.getElementById('project-select');
             const projectList = document.getElementById('project-list');
+
+            console.log('Rendering projects:', projects);
 
             // Update dropdown
             select.innerHTML = '<option value="">Choose a project...</option>';
@@ -722,21 +744,31 @@
             });
 
             // Update project list
-            projectList.innerHTML = projects.map(project => `
-                <div class="project-item">
+            projectList.innerHTML = '';
+            projects.forEach(project => {
+                const div = document.createElement('div');
+                div.className = 'project-item';
+                div.innerHTML = `
                     <span>${project}</span>
                     <button class="btn-remove-project" data-project="${project}">Remove</button>
-                </div>
-            `).join('');
+                `;
+                projectList.appendChild(div);
+            });
         }
 
         // Event delegation for remove project buttons
         document.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-remove-project')) {
                 const projectName = e.target.getAttribute('data-project');
+                console.log('Removing project:', projectName);
+                
                 if (confirm(`Are you sure you want to remove "${projectName}"?`)) {
                     const currentProjects = await loadProjects();
+                    console.log('Current projects before removal:', currentProjects);
+                    
                     const updatedProjects = currentProjects.filter(p => p !== projectName);
+                    console.log('Updated projects after removal:', updatedProjects);
+                    
                     await saveProjects(updatedProjects);
                     await renderProjects();
                     alert('Project removed successfully!');
