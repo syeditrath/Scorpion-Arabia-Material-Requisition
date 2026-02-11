@@ -728,20 +728,21 @@
                     <button class="btn-remove-project" data-project="${project}">Remove</button>
                 </div>
             `).join('');
-
-            // Attach remove listeners
-            document.querySelectorAll('.btn-remove-project').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const projectName = e.target.getAttribute('data-project');
-                    if (confirm(`Are you sure you want to remove "${projectName}"?`)) {
-                        const currentProjects = await loadProjects();
-                        const updatedProjects = currentProjects.filter(p => p !== projectName);
-                        await saveProjects(updatedProjects);
-                        await renderProjects();
-                    }
-                });
-            });
         }
+
+        // Event delegation for remove project buttons
+        document.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-remove-project')) {
+                const projectName = e.target.getAttribute('data-project');
+                if (confirm(`Are you sure you want to remove "${projectName}"?`)) {
+                    const currentProjects = await loadProjects();
+                    const updatedProjects = currentProjects.filter(p => p !== projectName);
+                    await saveProjects(updatedProjects);
+                    await renderProjects();
+                    alert('Project removed successfully!');
+                }
+            }
+        });
 
         // Add new project
         document.getElementById('add-project-btn-mgmt').addEventListener('click', async () => {
