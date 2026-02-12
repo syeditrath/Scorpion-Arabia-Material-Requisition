@@ -472,10 +472,10 @@
     <script>
         // EmailJS Configuration
         // IMPORTANT: Sign up at https://www.emailjs.com/ and replace these values
-        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ'; // Your EmailJS public key
-        const EMAILJS_SERVICE_ID = 'service_628rnep'; // Your EmailJS service ID
-        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd'; // Your EmailJS template ID
-        const PROCUREMENT_HEAD_EMAIL = 'syed.itrath@scorpion-contracting.com'; // Procurement head's email
+        const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; // Your EmailJS public key
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Your EmailJS service ID
+        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Your EmailJS template ID
+        const PROCUREMENT_HEAD_EMAIL = 'procurement.head@scorpionarabia.com'; // Procurement head's email
 
         // Initialize EmailJS
         if (typeof emailjs !== 'undefined') {
@@ -518,9 +518,9 @@
         // and replace CLIENT_ID with your actual Application (client) ID
         const msalConfig = {
             auth: {
-                clientId: 'cfbe4917-0985-4040-bc07-53069c8a9312', // Replace with your Azure AD app client ID
+                clientId: 'cfbe4917-0985-4040-bc07-53069c8a9312',
                 authority: 'https://login.microsoftonline.com/common',
-                redirectUri: window.location.origin
+                redirectUri: 'https://syeditrath.github.io/Scorpion-Arabia-Material-Requisition/'
             },
             cache: {
                 cacheLocation: 'localStorage',
