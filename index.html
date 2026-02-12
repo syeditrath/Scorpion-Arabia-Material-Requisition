@@ -471,11 +471,14 @@
 
     <script>
         // EmailJS Configuration
-        // IMPORTANT: Sign up at https://www.emailjs.com/ and replace these values
-        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ'; // Your EmailJS public key
-        const EMAILJS_SERVICE_ID = 'service_628rnep'; // Your EmailJS service ID
-        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd'; // Your EmailJS template ID
-        const PROCUREMENT_HEAD_EMAIL = 'procurement.head@scorpionarabia.com'; // Procurement head's email
+        // STEP 1: Go to https://www.emailjs.com/ and create a free account
+        // STEP 2: Create an Email Service (connect Gmail or Outlook)
+        // STEP 3: Create an Email Template
+        // STEP 4: Replace the values below with your actual credentials
+        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ';
+        const EMAILJS_SERVICE_ID = 'service_628rnep';
+        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd';
+        const PROCUREMENT_HEAD_EMAIL = 'syed.itrath@scorpion-contracting.com'; // e.g. john@scorpionarabia.com
 
         // Initialize EmailJS
         if (typeof emailjs !== 'undefined') {
@@ -689,6 +692,12 @@
                 } else {
                     // First time - initialize with default projects
                     projectsList = [
+                        'Building A - Phase 1',
+                        'Building A - Phase 2',
+                        'Building B - Foundation',
+                        'Building B - Structure',
+                        'Infrastructure - Roads',
+                        'Infrastructure - Utilities',
                         'Landscaping - North',
                         'Landscaping - South'
                     ];
@@ -698,6 +707,12 @@
             } catch (error) {
                 console.error('Error loading projects:', error);
                 projectsList = [
+                    'Building A - Phase 1',
+                    'Building A - Phase 2',
+                    'Building B - Foundation',
+                    'Building B - Structure',
+                    'Infrastructure - Roads',
+                    'Infrastructure - Utilities',
                     'Landscaping - North',
                     'Landscaping - South'
                 ];
@@ -917,61 +932,58 @@
                 return;
             }
 
-            try {
-                // Save to storage
-                const requests = loadRequests();
-                requests.push(...items);
-                saveRequests(requests);
+            // Step 1: Always save to localStorage and update table
+            const requests = loadRequests();
+            requests.push(...items);
+            saveRequests(requests);
+            renderTable();
 
-                // Create Excel file
+            // Step 2: Clear the form immediately
+            document.getElementById('project-select').value = '';
+            document.getElementById('submitter-name').value = '';
+            document.getElementById('submitter-phone').value = '';
+            document.getElementById('items-container').innerHTML = `
+                <div class="item-row">
+                    <div class="input-group">
+                        <span class="field-label">Item Name</span>
+                        <input type="text" class="item-name" placeholder="e.g., Cement bags">
+                    </div>
+                    <div class="input-group">
+                        <span class="field-label">Quantity</span>
+                        <input type="number" class="item-quantity" placeholder="0" min="1">
+                    </div>
+                    <div class="input-group">
+                        <span class="field-label">Delivery Location</span>
+                        <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
+                    </div>
+                    <div class="input-group">
+                        <span class="field-label">Requested Date</span>
+                        <input type="date" class="item-date">
+                    </div>
+                    <button class="btn btn-danger remove-item" title="Remove item">×</button>
+                </div>
+            `;
+            attachRemoveListeners();
+
+            alert('Procurement request submitted successfully!');
+
+            // Step 3: Try OneDrive upload in background (won't block anything)
+            try {
                 const excelBlob = createExcelFile(requests);
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                 const filename = `Material_Requisitions_${timestamp}.xlsx`;
-
-                // Upload to OneDrive
                 await uploadToOneDrive(excelBlob, filename);
+                console.log('Saved to OneDrive successfully');
+            } catch (oneDriveError) {
+                console.warn('OneDrive upload failed:', oneDriveError.message);
+            }
 
-                // Send email notification to procurement head
-                const emailSent = await sendNotification(items, submitterName, submitterPhone, project);
-                
-                if (!emailSent) {
-                    console.warn('Email notification failed, but request was saved');
-                }
-
-                // Update table
-                renderTable();
-
-                // Clear form
-                document.getElementById('project-select').value = '';
-                document.getElementById('submitter-name').value = '';
-                document.getElementById('submitter-phone').value = '';
-                document.getElementById('items-container').innerHTML = `
-                    <div class="item-row">
-                        <div class="input-group">
-                            <span class="field-label">Item Name</span>
-                            <input type="text" class="item-name" placeholder="e.g., Cement bags">
-                        </div>
-                        <div class="input-group">
-                            <span class="field-label">Quantity</span>
-                            <input type="number" class="item-quantity" placeholder="0" min="1">
-                        </div>
-                        <div class="input-group">
-                            <span class="field-label">Delivery Location</span>
-                            <input type="text" class="item-location" placeholder="e.g., Site A, Warehouse 2">
-                        </div>
-                        <div class="input-group">
-                            <span class="field-label">Requested Date</span>
-                            <input type="date" class="item-date">
-                        </div>
-                        <button class="btn btn-danger remove-item" title="Remove item">×</button>
-                    </div>
-                `;
-                attachRemoveListeners();
-
-                alert('Procurement request submitted successfully! Notification sent to procurement head and saved to OneDrive.');
-            } catch (error) {
-                console.error('Submission error:', error);
-                alert('Error saving to OneDrive: ' + error.message);
+            // Step 4: Try email notification in background (won't block anything)
+            try {
+                await sendNotification(items, submitterName, submitterPhone, project);
+                console.log('Email notification sent');
+            } catch (emailError) {
+                console.warn('Email failed:', emailError.message);
             }
         });
 
