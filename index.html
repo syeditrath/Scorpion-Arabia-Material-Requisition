@@ -472,9 +472,9 @@
     <script>
         // EmailJS Configuration
         // IMPORTANT: Sign up at https://www.emailjs.com/ and replace these values
-        const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; // Your EmailJS public key
-        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Your EmailJS service ID
-        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Your EmailJS template ID
+        const EMAILJS_PUBLIC_KEY = 'ZmHZyJMawS8ZflAZJ'; // Your EmailJS public key
+        const EMAILJS_SERVICE_ID = 'service_628rnep'; // Your EmailJS service ID
+        const EMAILJS_TEMPLATE_ID = 'template_uro8tbd'; // Your EmailJS template ID
         const PROCUREMENT_HEAD_EMAIL = 'procurement.head@scorpionarabia.com'; // Procurement head's email
 
         // Initialize EmailJS
@@ -689,12 +689,6 @@
                 } else {
                     // First time - initialize with default projects
                     projectsList = [
-                        'Building A - Phase 1',
-                        'Building A - Phase 2',
-                        'Building B - Foundation',
-                        'Building B - Structure',
-                        'Infrastructure - Roads',
-                        'Infrastructure - Utilities',
                         'Landscaping - North',
                         'Landscaping - South'
                     ];
@@ -704,12 +698,6 @@
             } catch (error) {
                 console.error('Error loading projects:', error);
                 projectsList = [
-                    'Building A - Phase 1',
-                    'Building A - Phase 2',
-                    'Building B - Foundation',
-                    'Building B - Structure',
-                    'Infrastructure - Roads',
-                    'Infrastructure - Utilities',
                     'Landscaping - North',
                     'Landscaping - South'
                 ];
@@ -803,18 +791,21 @@
         renderProjects();
 
         // Storage management
-        async function loadRequests() {
+        // Storage management using localStorage
+        function loadRequests() {
             try {
-                const result = await window.storage.get('procurement-requests');
-                return result ? JSON.parse(result.value) : [];
+                const stored = localStorage.getItem('scorpion-procurement-requests');
+                return stored ? JSON.parse(stored) : [];
             } catch (error) {
+                console.error('Error loading requests:', error);
                 return [];
             }
         }
 
-        async function saveRequests(requests) {
+        function saveRequests(requests) {
             try {
-                await window.storage.set('procurement-requests', JSON.stringify(requests));
+                localStorage.setItem('scorpion-procurement-requests', JSON.stringify(requests));
+                console.log('Requests saved:', requests);
             } catch (error) {
                 console.error('Error saving requests:', error);
             }
@@ -928,9 +919,9 @@
 
             try {
                 // Save to storage
-                const requests = await loadRequests();
+                const requests = loadRequests();
                 requests.push(...items);
-                await saveRequests(requests);
+                saveRequests(requests);
 
                 // Create Excel file
                 const excelBlob = createExcelFile(requests);
@@ -948,7 +939,7 @@
                 }
 
                 // Update table
-                await renderTable();
+                renderTable();
 
                 // Clear form
                 document.getElementById('project-select').value = '';
@@ -1014,8 +1005,8 @@
         });
 
         // Render table
-        async function renderTable() {
-            const requests = await loadRequests();
+        function renderTable() {
+            const requests = loadRequests();
             const tbody = document.getElementById('requests-tbody');
 
             if (requests.length === 0) {
